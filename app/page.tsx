@@ -5,30 +5,31 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
     const [text, setText] = useState('');
+    const [images, setImages] = useState<string[]>([]);
     const [status, setStatus] = useState<'idle' | 'burning' | 'finished'>('idle');
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const charLimit = 140;
 
     useEffect(() => {
         if (timerRef.current) clearTimeout(timerRef.current);
-        if (text.length > 0 && status === 'idle') {
+        if ((text.length > 0 || images.length > 0) && status === 'idle') {
             timerRef.current = setTimeout(() => {
                 handleBurn();
-            }, 5 * 60 * 1000);
+            }, 5 * 60 * 1000); // 5 minutes auto-burn
         }
         return () => {
             if (timerRef.current) clearTimeout(timerRef.current);
         };
-    }, [text, status]);
+    }, [text, images, status]);
 
     const handleBurn = () => {
-        if (!text) return;
+        if (!text && images.length === 0) return;
         setStatus('burning');
         const burnSound = new Audio('/sounds/burn.wav');
         burnSound.play();
 
         setTimeout(() => {
             setText('');
+            setImages([]);
         }, 1500);
 
         setTimeout(() => {
@@ -41,9 +42,25 @@ export default function Home() {
     };
 
     const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const val = e.target.value;
-        if (val.length <= charLimit) {
-            setText(val);
+        setText(e.target.value);
+    };
+
+    const handlePaste = (e: React.ClipboardEvent) => {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                const blob = items[i].getAsFile();
+                if (blob) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        if (event.target?.result) {
+                            setImages(prev => [...prev, event.target!.result as string]);
+                        }
+                    };
+                    reader.readAsDataURL(blob);
+                    e.preventDefault(); // Prevent default paste behavior if it's an image
+                }
+            }
         }
     };
 
@@ -117,11 +134,12 @@ export default function Home() {
                     SHADOW MEMO
                 </h1>
             </header>
+
             {/* Action Area */}
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-md px-2">
                 <button
                     onClick={handleBurn}
-                    disabled={!text || status !== 'idle'}
+                    disabled={(!text && images.length === 0) || status !== 'idle'}
                     className={`w-full group relative h-16 bg-transparent border-2 border-ninja-red rounded-xl text-ninja-red font-black text-xl uppercase tracking-widest transition-all duration-200 active:scale-95 hover:bg-ninja-red hover:text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                     <span className="relative z-10 flex items-center justify-center gap-3 font-ninja">
@@ -170,22 +188,41 @@ export default function Home() {
                     )}
                 </AnimatePresence>
 
-                {/* Text Area */}
-                <textarea
-                    value={text}
-                    onChange={handleTextChange}
-                    placeholder={`その不条理、クソリプ\nコピペも全て焼き尽くしてくれるわ！`}
-                    className={`w-full h-full bg-transparent p-6 text-2xl font-bold font-yuji text-gray-100 resize-none focus:outline-none leading-relaxed tracking-wide placeholder:text-gray-600 transition-all duration-200 ${status !== 'idle' ? 'text-transparent scale-[1.5] blur-xl grayscale' : 'opacity-100'}`}
-                    spellCheck={false}
-                />
+                {/* Content Area (Scrollable) */}
+                <div className={`w-full h-full overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-ninja-red scrollbar-track-transparent ${status !== 'idle' ? 'opacity-0 transition-opacity duration-200' : ''}`}>
+                    <textarea
+                        value={text}
+                        onChange={handleTextChange}
+                        onPaste={handlePaste}
+                        placeholder={`その不条理、クソリプ\nコピペも全て焼き尽くしてくれるわ！`}
+                        className={`w-full bg-transparent text-2xl font-bold font-yuji text-gray-100 resize-none focus:outline-none leading-relaxed tracking-wide placeholder:text-gray-600 min-h-[120px]`}
+                        style={{ height: 'auto' }}
+                        rows={3}
+                        spellCheck={false}
+                    />
 
-                {/* Character Counter (Moved inside or below? Keep it in header or as overlay? Let's keep it overlay/bottom right for now since header space is taken) */}
-                <div className={`absolute bottom-4 right-4 text-xs font-mono font-bold pointer-events-none ${text.length === charLimit ? 'text-red-500' : 'text-gray-600'}`}>
-                    {text.length} / {charLimit}
+                    {/* Image Preview Area */}
+                    {images.length > 0 && (
+                        <div className="mt-4 grid grid-cols-2 gap-3">
+                            {images.map((img, idx) => (
+                                <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-700">
+                                    <img src={img} alt={`pasted-${idx}`} className="w-full h-auto object-cover" />
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                        <span className="text-white text-xs">燃やす</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Info / Counter (Now just count) */}
+                <div className={`absolute bottom-4 right-4 text-xs font-mono font-bold pointer-events-none text-gray-600 transition-opacity ${status !== 'idle' ? 'opacity-0' : 'opacity-100'}`}>
+                    {text.length} chars {images.length > 0 ? `+ ${images.length} img` : ''}
                 </div>
             </div>
-
 
         </main>
     );
 }
+
