@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 0, 0, 0;
+  --background-end-rgb: 26, 26, 26;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+  min-height: 100vh;
+  font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+}
+
+/* Custom Ninja Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ff0033;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #cc0000;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Fire Animations */
+@keyframes shake-violent {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+
+  10% {
+    transform: translate(-10px, -10px) rotate(-5deg);
+  }
+
+  20% {
+    transform: translate(10px, 10px) rotate(5deg);
+  }
+
+  30% {
+    transform: translate(-15px, 5px) rotate(-5deg);
+  }
+
+  40% {
+    transform: translate(15px, -5px) rotate(5deg);
+  }
+
+  50% {
+    transform: translate(-5px, 15px) rotate(-5deg);
+  }
+
+  60% {
+    transform: translate(5px, -15px) rotate(5deg);
+  }
+
+  70% {
+    transform: translate(-20px, 0px) rotate(-5deg);
+  }
+
+  80% {
+    transform: translate(20px, 0px) rotate(5deg);
+  }
+
+  90% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+.animate-shake-violent {
+  animation: shake-violent 0.5s ease-in-out infinite;
+}
+
+@keyframes rise {
+  0% {
+    transform: translateY(100%) scale(1);
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-20%) scale(1.5);
+    opacity: 0;
+  }
+}
+
+.animate-rise {
+  animation: rise 2s forwards ease-out;
+}
