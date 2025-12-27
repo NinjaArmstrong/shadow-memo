@@ -118,7 +118,7 @@ export default function Home() {
                 </h1>
             </header>
             {/* Action Area */}
-            <div className="z-10 w-full max-w-md mt-6 px-2">
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-md px-2">
                 <button
                     onClick={handleBurn}
                     disabled={!text || status !== 'idle'}
